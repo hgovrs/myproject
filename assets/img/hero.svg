@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="Ilustração de instalação elétrica">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f5686"/>
+      <stop offset="1" stop-color="#0f2a41"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e3e3e3"/>
+      <stop offset="1" stop-color="#b8bcc0"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="480" fill="url(#sky)"/>
+  <!-- glow -->
+  <circle cx="500" cy="120" r="150" fill="#ffffff" opacity="0.06"/>
+  <circle cx="120" cy="380" r="120" fill="#ffffff" opacity="0.05"/>
+
+  <!-- Electrical panel / breaker box -->
+  <rect x="210" y="90" width="220" height="300" rx="14" fill="url(#panel)" stroke="#0f2a41" stroke-width="4"/>
+  <rect x="230" y="112" width="180" height="60" rx="6" fill="#0f2a41"/>
+  <!-- breaker rows -->
+  <g fill="#5c5953">
+    <rect x="234" y="192" width="80" height="26" rx="4"/>
+    <rect x="326" y="192" width="80" height="26" rx="4"/>
+    <rect x="234" y="228" width="80" height="26" rx="4"/>
+    <rect x="326" y="228" width="80" height="26" rx="4"/>
+    <rect x="234" y="264" width="80" height="26" rx="4"/>
+    <rect x="326" y="264" width="80" height="26" rx="4"/>
+  </g>
+  <!-- breaker switches -->
+  <g fill="#ffd34d">
+    <rect x="292" y="198" width="14" height="14" rx="2"/>
+    <rect x="384" y="198" width="14" height="14" rx="2"/>
+    <rect x="240" y="234" width="14" height="14" rx="2"/>
+    <rect x="384" y="234" width="14" height="14" rx="2"/>
+    <rect x="292" y="270" width="14" height="14" rx="2"/>
+    <rect x="332" y="270" width="14" height="14" rx="2"/>
+  </g>
+
+  <!-- Big lightning bolt -->
+  <path d="M470 60 L360 250 h70 l-30 150 150-210 h-72 l40-130 z"
+        fill="#ffd34d" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" opacity="0.95"/>
+
+  <!-- Cables -->
+  <path d="M60 430 C 180 360, 200 300, 210 250" fill="none" stroke="#400307" stroke-width="8" stroke-linecap="round"/>
+  <path d="M90 450 C 220 380, 240 320, 260 300" fill="none" stroke="#5c5953" stroke-width="8" stroke-linecap="round"/>
+</svg>

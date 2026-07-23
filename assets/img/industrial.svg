@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Setor industrial">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5c5953"/>
+      <stop offset="1" stop-color="#3a3833"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bg)"/>
+  <g opacity="0.9">
+    <!-- factory silhouette -->
+    <rect x="70" y="300" width="460" height="200" fill="#ffffff" opacity="0.10"/>
+    <!-- sawtooth roof -->
+    <path d="M70 300 l60 -50 v50 z M170 300 l60 -50 v50 z M270 300 l60 -50 v50 z M370 300 l60 -50 v50 z M470 300 l60 -50 v50 z" fill="#ffffff" opacity="0.16"/>
+    <!-- chimneys -->
+    <rect x="120" y="150" width="34" height="150" fill="#ffffff" opacity="0.12"/>
+    <rect x="180" y="190" width="34" height="110" fill="#ffffff" opacity="0.12"/>
+    <!-- gear -->
+    <g transform="translate(430,190)" fill="#ffd34d" opacity="0.85">
+      <path d="M0 -58 l12 0 6 22 20 8 18 -14 8 8 -14 18 8 20 22 6 0 12 -22 6 -8 20 14 18 -8 8 -18 -14 -20 8 -6 22 -12 0 -6 -22 -20 -8 -18 14 -8 -8 14 -18 -8 -20 -22 -6 0 -12 22 -6 8 -20 -14 -18 8 -8 18 14 20 -8 6 -22 z"/>
+      <circle cx="0" cy="0" r="16" fill="#3a3833"/>
+    </g>
+    <!-- windows -->
+    <g fill="#ffd34d" opacity="0.8">
+      <rect x="100" y="340" width="24" height="24"/><rect x="140" y="340" width="24" height="24"/><rect x="180" y="340" width="24" height="24"/>
+      <rect x="100" y="390" width="24" height="24"/><rect x="140" y="390" width="24" height="24"/><rect x="180" y="390" width="24" height="24"/>
+    </g>
+  </g>
+</svg>
