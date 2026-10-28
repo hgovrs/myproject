@@ -427,3 +427,148 @@ Não recuperadas ou não validadas nesta sessão. Não sustentam preços/cotas a
 - **[P12]** [Gemma — termos](https://ai.google.dev/gemma/terms).
 - **[P13]** [Gemini API — termos](https://ai.google.dev/gemini-api/terms).
 - **[P14]** [Groq — privacidade](https://groq.com/privacy-policy/).
+
+## 14. Experimento na Azure: modelo próprio servido ao chat
+
+### 14.1 É possível? Qual é a recomendação?
+
+**Sim.** Podemos alugar uma VM Linux na Azure, instalar um modelo de pesos abertos e disponibilizar um endpoint autenticado para o chat Flutter. Firebase continua responsável por login e dados; a inferência acontece na Azure, sem passar pelo Firebase AI Logic.
+
+Para o primeiro experimento, a recomendação é:
+
+- **Modelo:** `Qwen/Qwen3-4B-Instruct-2507`, em quantização de 4 bits compatível com o runtime.
+- **Runtime:** llama.cpp com modelo GGUF de origem verificável; Ollama é alternativa se houver pacote do checkpoint exato, com procedência e template conferidos.
+- **Máquina:** VM Linux CPU com 4 vCPUs e 16 GiB de RAM para validar funcionalidade, ou GPU NVIDIA com pelo menos 16 GiB de VRAM para avaliar experiência interativa.
+- **Carga inicial:** um usuário/uma geração por vez, contexto de 4.096 tokens e saída máxima de 1.024 tokens, ampliando somente após medir memória e qualidade.
+- **Operação:** ligar apenas durante testes e confirmar desalocação ao terminar.
+
+Esses tamanhos e limites são pontos de partida de engenharia, **não requisitos oficiais nem garantia de desempenho**. O contexto inclui instruções, catálogo, histórico e saída: enviar apenas trechos relevantes e reservar espaço para a resposta. Para roteiros longos, gerar por dia ou aumentar o limite após benchmark, sem aceitar JSON truncado.
+
+O Qwen3-Instruct-2507 é descrito pelo projeto como modelo sem modo de raciocínio explícito; isso simplifica o chat e evita começar com uma variante Thinking [S3]. A qualidade em português e a precisão de alterações ainda precisam passar pelos testes da seção 11.
+
+Esse caminho é **uma alternativa de laboratório** à recomendação da seção 12, não uma decisão de substituir a opção hospedada gratuita nem de financiar produção com créditos de desenvolvimento.
+
+### 14.2 Visual Studio Enterprise e créditos Azure
+
+**Não é possível confirmar o benefício apenas pelo nome “Visual Studio Enterprise”.** A licença do IDE, a assinatura Visual Studio, a oferta Azure associada e permissões organizacionais são coisas diferentes.
+
+As ofertas de crédito Azure para assinantes Visual Studio são voltadas a desenvolvimento/testes, mas é necessário consultar os termos da oferta efetivamente atribuída. Não tratar uma aplicação pública atendendo usuários reais como laboratório apenas porque ainda não cobra assinatura.
+
+Antes de criar recursos:
+
+1. Abrir o [portal de benefícios Visual Studio](https://my.visualstudio.com/benefits) e verificar se existe um benefício Azure ativo, seu valor, renovação, validade e conta de ativação.
+2. No Azure Portal, confirmar a **assinatura de cobrança** selecionada, a oferta associada e o saldo/crédito disponível; não confundir com outra assinatura do mesmo diretório.
+3. Consultar os termos: uso permitido, restrições de serviços/Marketplace, eventual não acumulação de saldo e comportamento ao esgotar o crédito.
+4. Confirmar com o administrador as permissões e políticas aplicáveis ao experimento, especialmente para projetos pessoais, modelos baixados e dados enviados à nuvem.
+5. Verificar limite de gastos, alertas e eventual transição para cobrança. Não remover um limite nem converter para pagamento por uso só para liberar uma VM.
+6. Usar dados sintéticos e acesso restrito aos participantes autorizados do teste.
+
+**Não foi possível verificar nesta sessão a página de benefícios do Microsoft Learn nem os termos específicos da oferta.** Portanto, não prometemos um valor mensal, elegibilidade individual, cobertura de qualquer serviço nem ausência de cobrança. A possibilidade de testes depende dessas confirmações [A2, A3].
+
+Crédito monetário também **não equivale a cota de GPU**. A assinatura pode ter cota zero, restrições de família/região ou pedido de aumento não elegível. Mesmo com cota aprovada, pode faltar capacidade física.
+
+### 14.3 Escolha de VM e modelo
+
+| Cenário | Configuração a procurar | Modelo | Decisão |
+|---|---|---|---|
+| Validar integração com menor complexidade | Linux, 4 vCPUs, 16 GiB RAM, SSD com espaço para SO, pesos e artefatos | Qwen3-4B-Instruct-2507 quantizado | Primeiro teste se GPU não estiver disponível; latência em CPU precisa ser medida |
+| Validar chat interativo | GPU NVIDIA com 16 GiB VRAM ou mais; RAM suficiente para runtime/backend | Mesmo modelo de 4B | Preferível para medir experiência; depende de driver, região, cota e preço |
+| Comparar qualidade | GPU dimensionada após medição do modelo maior | Qwen3-8B quantizado, avaliando modo sem thinking | Só promover se melhorar os casos do app; não presumir que tamanho maior garante qualidade |
+| Explorar raciocínio | Máquina dimensionada para o checkpoint escolhido | DeepSeek-R1-Distill-Qwen-7B | Experimento secundário; medir verbosidade, latência e validade estrutural |
+
+Uma família como **NCasT4_v3** pode ser investigada para GPU T4, mas seu SKU, disponibilidade, especificações e preço **não foram confirmados nesta pesquisa** [A4]. Não selecionar automaticamente a maior GPU nem assumir que todas as máquinas com “GPU” servem igualmente para inferência CUDA.
+
+Preferir capacidade sob demanda para o primeiro teste. Spot pode sofrer interrupção e exige recuperação, portanto não é uma economia garantida para uma demonstração de chat.
+
+Para o modelo de 4B em 4 bits, aproximadamente 2 GB representam apenas os pesos ideais, conforme a seção 6.3. O processo real consome mais. Dimensionar disco com margem para download, quantização e versões coexistentes; se a conversão ocorrer na própria VM, os pesos originais e artefatos temporários podem ocupar muito mais que o GGUF final.
+
+Não iniciar com DeepSeek completo, modelos de centenas de bilhões de parâmetros ou fine-tuning. O objetivo é **servir inferência de um modelo pequeno existente**.
+
+### 14.4 Arquitetura do endpoint
+
+Fluxo proposto:
+
+**Chat Flutter → HTTPS → API do aplicativo na Azure → llama.cpp/Ollama em interface local → resposta ao chat.**
+
+No laboratório, proxy HTTPS, API e runtime podem estar na mesma VM para evitar serviços extras. Isso cria um ponto único de falha, aceitável apenas para o teste controlado.
+
+- O Flutter envia a mensagem e o Firebase ID token; a API valida assinatura, emissor, público e expiração com biblioteca oficial adequada, não apenas decodifica o token.
+- A API valida autorização para a viagem solicitada. Firebase App Check pode acrescentar proteção, mas não substitui autenticação.
+- O runtime escuta somente em loopback ou rede privada; **não publicar diretamente as portas do Ollama/llama.cpp**.
+- Expor externamente somente o endpoint HTTPS necessário; restringir SSH ao acesso administrativo autorizado, sem abrir para toda a internet.
+- TLS termina em um proxy configurado com certificado confiável e renovação. Não distribuir certificados ignorados pelo cliente nem desabilitar validação TLS.
+- Segredos ficam no servidor. Não colocar chave administrativa, credencial de conta de serviço ou senha compartilhada no aplicativo.
+- CORS permite apenas origens necessárias no Flutter Web, mas não é mecanismo de autenticação.
+- A API fixa modelo, ferramentas e limites permitidos; o cliente não escolhe livremente caminho de arquivo, URL interna ou modelo arbitrário.
+
+Se a API acessar Firestore com Admin SDK, lembrar que esse acesso **não é limitado pelas Security Rules do cliente**: implementar autorização por proprietário no backend. Preferir identidade federada/credenciais de curta duração quando disponíveis; qualquer credencial de serviço precisa de acesso mínimo e armazenamento seguro.
+
+Para simplificar o primeiro teste, o app pode carregar o roteiro autorizado pelo Firebase e enviar somente o contexto necessário à API; esse conteúdo ainda deve ser tratado como entrada não confiável. A resposta gera uma proposta, não uma gravação automática privilegiada.
+
+### 14.5 Sequência de implantação do laboratório
+
+1. **Aprovar o uso:** conferir benefício, saldo, oferta, política, região, cota e estimativa de custo; não provisionar até isso estar resolvido.
+2. **Isolar recursos:** criar grupo de recursos específico, etiquetas de finalidade e responsável, orçamento e plano de remoção.
+3. **Provisionar a VM:** selecionar Linux suportado, acesso por chave, disco adequado e regras de rede restritas. Verificar o preço estimado antes de confirmar.
+4. **Preparar o ambiente:** atualizar o sistema e instalar runtime de fonte oficial; em GPU, instalar driver compatível e confirmar que o runtime realmente usa a GPU.
+5. **Obter os pesos:** escolher o checkpoint exato, conferir licença, origem, revisão e checksum. Usar GGUF confiável ou converter/quantizar o checkpoint oficial com processo documentado; não confundir Qwen3-4B original com Instruct-2507.
+6. **Validar localmente:** carregar o modelo com contexto e concorrência pequenos, testar português e saída estruturada e medir memória/latência antes de abrir o endpoint externo.
+7. **Implementar a API:** validar identidade, autorização, tamanho de entrada, esquema de saída, cancelamento e limites por usuário. Usar fila limitada e rejeitar excesso em vez de acumular trabalho sem controle.
+8. **Publicar com HTTPS:** conectar proxy à API e manter inferência privada; adicionar verificação de saúde sem expor prompts, configuração ou credenciais.
+9. **Integrar ao Flutter:** mostrar estados de espera/geração, erros e indisponibilidade. Streaming pode melhorar percepção de latência, mas só aplicar mudanças no roteiro após receber e validar a resposta completa.
+10. **Executar testes:** incluir tokens inválidos, acesso a viagem alheia, pedidos grandes, fila cheia, cancelamento e VM desligada, além dos testes de qualidade.
+11. **Encerrar:** parar o atendimento, desalocar a VM e conferir recursos remanescentes. Ao terminar o experimento, excluir recursos exclusivos que não precisem ser preservados.
+
+Não foram criados recursos Azure, instaladas dependências ou configuradas credenciais nesta tarefa; esta seção descreve a execução futura.
+
+### 14.6 Custos, desligamento e orçamento de testes
+
+Modelo baixado não gera tarifa de API por token, mas gera **custo de máquina enquanto estiver alocada**, além dos recursos associados.
+
+A documentação oficial consultada confirma [A1]:
+
+- VM em **Stopped/Allocated**, inclusive após desligamento por dentro do sistema operacional, continua sendo cobrada por computação.
+- VM em **Stopped (Deallocated)** deixa de ser cobrada pela instância de computação.
+- Discos e determinados recursos de rede podem continuar gerando despesas após a desalocação.
+
+Configurar desligamento programado e verificar se o estado final é realmente desalocado. O reinício exige capacidade disponível e recarregamento do modelo; o chat deve informar indisponibilidade sem iniciar cobrança alternativa automaticamente.
+
+Fórmula de planejamento:
+
+**Horas disponíveis ≈ (crédito efetivamente utilizável − reserva − custos adicionais) ÷ preço por hora da VM.**
+
+Exemplo **totalmente hipotético, não cotação Azure nem valor confirmado do benefício**: crédito de US$ 150, reserva de US$ 30 e US$ 20 para disco/rede deixam US$ 100 para computação.
+
+| Preço hipotético da VM | Horas de computação disponíveis |
+|---:|---:|
+| US$ 0,25/h | 400 h |
+| US$ 0,75/h | aproximadamente 133 h |
+| US$ 1,50/h | aproximadamente 66 h |
+
+Uma VM de US$ 0,75/h ligada por 720 horas consumiria **US$ 540 apenas de computação**. A mesma tarifa por 40 horas de teste corresponderia a US$ 30. Não pressupor que crédito mensal mantenha GPU ligada 24 horas.
+
+Somar discos, snapshots, IP público, tráfego de saída, logs e quaisquer serviços auxiliares. Backend Azure acessando Firebase também pode gerar transferência entre nuvens. Orçamentos e alertas não equivalem a bloqueio; conferir o limite de gastos efetivo da oferta.
+
+O preço precisa ser consultado por região, SKU, sistema operacional e assinatura na calculadora/portal [A5]. Só depois comparar custo por roteiro aceito com Gemini/DeepSeek hospedados.
+
+### 14.7 Critério para continuar ou abandonar o experimento
+
+Continuar se houver permissão de uso, crédito suficiente, endpoint protegido, respostas úteis em português e latência aceitável nos testes. Começar com uma sessão concorrente; aumentar somente após medir fila, memória e custo.
+
+Se a CPU for lenta, avaliar GPU por poucas horas. Se GPU não tiver cota ou o custo superar o orçamento, manter o teste local ou comparar API hospedada, sem trocar silenciosamente de assinatura nem remover limite de gastos.
+
+**Recomendação final para o laboratório:** Qwen3-4B-Instruct-2507 quantizado + llama.cpp + API autenticada na mesma VM, usando Firebase para identidade e dados. GPU é preferível para avaliar o chat, mas não é pré-requisito para testar integração. Para produção, fazer uma nova avaliação de licença da oferta, disponibilidade, segurança, redundância e custo.
+
+### 14.8 Fontes adicionais e estado da verificação
+
+Pesquisa complementar em 28/10/2026:
+
+- **[A1] Recuperada:** [Microsoft — estados da VM e cobrança, fonte oficial](https://raw.githubusercontent.com/MicrosoftDocs/azure-compute-docs/main/articles/virtual-machines/states-billing.md). Sustenta a distinção entre parada e desalocação e despesas residuais.
+- **[S3] Recuperada novamente:** [Qwen3 — documentação oficial](https://raw.githubusercontent.com/QwenLM/Qwen3/main/README.md). Identifica Qwen3-4B-Instruct-2507, modo Instruct sem thinking e caminhos de execução local.
+- **[A2] Pendente:** [Microsoft Learn — benefício Azure no Visual Studio](https://learn.microsoft.com/en-us/visualstudio/subscriptions/vs-azure). Acesso falhou por DNS; valor e condições atuais não confirmados.
+- **[A3] Validação individual necessária:** [portal de benefícios Visual Studio](https://my.visualstudio.com/benefits). Não acessado nesta sessão; conferir a oferta atribuída sem compartilhar credenciais.
+- **[A4] Pendente:** [Microsoft Learn — família NCasT4_v3](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nct4-v3-series). Página não recuperada; confirmar família, SKU, memória e disponibilidade no portal.
+- **[A5] Pendente:** [calculadora de preços Azure](https://azure.microsoft.com/pricing/calculator/). Não foi obtida cotação nesta sessão.
+- **[A6] Pendente:** [Microsoft Learn — cotas de vCPU](https://learn.microsoft.com/en-us/azure/virtual-machines/quotas). Confirmar cotas regionais e por família na assinatura.
+
+As páginas não recuperadas não comprovam elegibilidade, preços ou cotas; a referência orienta a validação antes de gastar créditos.
