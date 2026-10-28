@@ -1,7 +1,9 @@
 # Aplicativo de roteiros de viagem — plano e comparação de IA
 
-**Data da pesquisa:** 28/10/2026.  
-**Stack proposta:** Flutter + Firebase.  
+**Data da pesquisa:** 28/10/2026.
+
+**Stack proposta:** Flutter + Firebase.
+
 **Objetivo:** começar sem cobrança e permitir evolução para baixo custo.
 
 ## 1. Resumo executivo e limites da pesquisa
