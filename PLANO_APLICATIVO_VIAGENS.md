@@ -572,3 +572,180 @@ Pesquisa complementar em 28/10/2026:
 - **[A6] Pendente:** [Microsoft Learn — cotas de vCPU](https://learn.microsoft.com/en-us/azure/virtual-machines/quotas). Confirmar cotas regionais e por família na assinatura.
 
 As páginas não recuperadas não comprovam elegibilidade, preços ou cotas; a referência orienta a validação antes de gastar créditos.
+
+## 15. Atualização: uso ocasional e custos com tarifas fornecidas
+
+### 15.1 Perfil de uso prioritário
+
+O usuário tende a criar um roteiro e ajustá-lo ao longo de dias ou semanas, não a enviar dez mensagens todos os dias. A unidade principal de acompanhamento será **custo por viagem criada e editada**, além de usuários ativos no mês e picos de chamadas.
+
+Uma viagem pode atravessar meses: os custos devem ser atribuídos ao período de cada chamada. Os cenários abaixo contabilizam todo o ciclo no mesmo mês apenas para facilitar comparação. Não são previsão de comportamento já medido.
+
+### 15.2 Tarifas informadas pelo usuário — não verificadas
+
+Valores apresentados na conversa em 28/10/2026, em USD por milhão de tokens:
+
+| Provedor / nome informado | Entrada | Saída |
+|---|---:|---:|
+| OpenAI — GPT-6 Luna | US$ 0,05 | US$ 0,25 |
+| Google — Gemini 2.5 Flash-Lite | US$ 0,10 | US$ 0,40 |
+| xAI — Grok 4.3 | US$ 1,25 | US$ 2,50 |
+| DeepSeek — V4.1 Flash, tarifa menor | US$ 0,15 | US$ 0,60 |
+| DeepSeek — V4.1 Flash, tarifa maior | US$ 0,30 | US$ 1,20 |
+
+**Esses nomes, tarifas e condições não foram confirmados em documentação oficial nesta tarefa.** São entradas para simulação, não cotações nem garantia de disponibilidade. A fonte é o texto fornecido pelo usuário; não foi acompanhado de links diretos para cada tabela.
+
+A descrição dos horários do DeepSeek no texto fornecido é inconsistente com a ordem dos valores. Por isso, usamos “tarifa menor/maior”, sem afirmar qual janela ou modalidade corresponde a cada uma. Não presumir que desconto de cache seja desconto de horário.
+
+Referências para futura confirmação: [OpenAI](https://developers.openai.com/api/docs/pricing), [Gemini](https://ai.google.dev/gemini-api/docs/pricing), [xAI](https://docs.x.ai/) e [DeepSeek](https://api-docs.deepseek.com/quick_start/pricing). A referência xAI é o portal de documentação, não uma tabela recuperada. Não confundir **Grok, da xAI**, com **Groq**, outro provedor discutido anteriormente.
+
+### 15.3 Três cenários para 1.000 usuários
+
+**A — uso ocasional leve, mais próximo da hipótese atual:**
+
+- Uma geração: 4.000 tokens de entrada e 3.000 de saída.
+- Três alterações: 2.000 de entrada e 500 de saída por chamada.
+- Duas dúvidas: 1.500 de entrada e 300 de saída por chamada.
+- Total por usuário: **6 chamadas, 13.000 tokens de entrada e 5.100 de saída**.
+- Total para 1.000 usuários: **6.000 chamadas, 13 milhões de entrada e 5,1 milhões de saída**.
+- Não inclui rodadas adicionais de ferramentas; contabilizá-las quando necessárias.
+
+**B — ciclo mais completo, da simulação anterior:**
+
+- Uma geração, cinco alterações, três dúvidas e duas chamadas extras após ferramentas.
+- Total por usuário: **11 chamadas, 23.500 tokens de entrada e 7.100 de saída**.
+- Total para 1.000 usuários: **11.000 chamadas, 23,5 milhões de entrada e 7,1 milhões de saída**.
+
+**C — referência de uso intenso, não cenário-base:**
+
+- 1.000 usuários ativos por dia, dez chamadas por dia, durante 30 dias.
+- 4.000 tokens de entrada e 700 de saída por chamada.
+- Total: **300.000 chamadas, 1,2 bilhão de tokens de entrada e 210 milhões de saída**.
+
+| Modelo informado | A: ciclo leve | B: ciclo completo | C: 1.000 DAUs por 30 dias |
+|---|---:|---:|---:|
+| OpenAI — GPT-6 Luna | US$ 1,93 | US$ 2,95 | US$ 112,50 |
+| Gemini 2.5 Flash-Lite | US$ 3,34 | US$ 5,19 | US$ 204,00 |
+| Grok 4.3 | US$ 29,00 | US$ 47,13 | US$ 2.025,00 |
+| DeepSeek — V4.1 Flash | US$ 5,01–10,02 | US$ 7,79–15,57 | US$ 306,00–612,00 |
+
+Fórmula: **milhões de tokens de entrada × tarifa de entrada + milhões de saída × tarifa de saída**. Arredondamento monetário feito no total, não por chamada.
+
+Exemplo do cenário A com as tarifas informadas do Gemini: `13 × 0,10 + 5,1 × 0,40 = US$ 3,34`. Uma margem aritmética de 20% resultaria em aproximadamente US$ 4,01; não é garantia de cobertura de todos os extras.
+
+Valores sem descontos de cache e sem franquias gratuitas. Não incluem busca, mapas, reservas, hospedagem, banco, tráfego, impostos, câmbio nem raciocínio adicional faturável. Chamadas de ferramentas podem provocar novas chamadas ao modelo e devem entrar na medição.
+
+**Decisão atualizada:** priorizar uma API hospedada para o uso ocasional, comparando um modelo pequeno OpenAI e um Gemini elegível após validar preços e qualidade. Não há vencedor confirmado. Manter a VM Azure como experimento opcional, não requisito para o app responder. A seção 12 permanece como referência do MVP gratuito; esta seção acrescenta o caminho pago de baixo consumo.
+
+## 16. Catálogo de roteiros prontos por cidade e país
+
+### 16.1 Funcionamento proposto
+
+Oferecer roteiros-base revisados para navegar antes de conversar com a IA. Filtrar por cidade/país, duração, interesses, faixa de orçamento e ritmo. Exemplo: “Roma — quatro dias — museus, gastronomia e vida noturna”.
+
+- **Cidade:** organizar dias por regiões próximas, com atividades principais, alternativas e blocos livres.
+- **País:** combinar cidades e dias de deslocamento; não apenas concatenar roteiros urbanos sem considerar chegada, saída e transporte.
+- **Personalização:** selecionar uma base e pedir à IA somente ajustes relevantes.
+- **Sem IA quando possível:** visualizar, copiar para a conta, remover pelo botão ou mudar uma ordem manualmente são operações normais do aplicativo.
+- **IA quando necessário:** interpretar pedidos, propor substituições, explicar escolhas e reorganizar conflitos.
+
+A cópia do roteiro-base pertence à viagem do usuário. Editá-la não modifica o catálogo nem viagens de outras pessoas. Mudanças na base não devem sobrescrever silenciosamente uma viagem já personalizada.
+
+### 16.2 Dados e publicação
+
+Cada base deve registrar identificador, versão, país/cidade, idioma, duração, interesses, regiões, atividades, duração estimada, alternativas, fontes, data da última revisão e estado de publicação. Preços precisam de moeda e status de estimativa/verificação; horários sazonais e restrições precisam de confirmação.
+
+Separar catálogo editorial, referências de lugares e viagens particulares. Apenas responsáveis autorizados podem publicar/editar bases; usuários comuns podem ler bases publicadas e editar suas próprias cópias.
+
+Ao atribuir datas reais, verificar fechamentos, reservas, tempo de deslocamento e fuso. Uma base sem datas não comprova que todas as atrações estarão abertas nos dias escolhidos.
+
+Conteúdo gerado por IA deve passar por revisão antes da publicação. Usar material original e referências permitidas, sem copiar roteiros comerciais. O custo de geração/revisão do catálogo é separado do custo de personalização e pode ser diluído entre várias viagens.
+
+**Economia esperada, ainda não medida:** menos geração integral, prompts menores e menos chamadas. As simulações da seção 15 ainda cobram uma geração completa por usuário; não antecipam uma porcentagem de economia sem benchmark.
+
+## 17. Teste de roteiro-base: Roma em quatro dias
+
+### 17.1 Hipóteses e limites
+
+Exemplo personalizado para **museus durante o dia, restaurantes, bares à noite e hospedagem em hostel**. Como datas, orçamento, duração e ritmo não foram informados, assumimos quatro dias completos, três noites e ritmo moderado, sem passeios intensos muito cedo após noites de bar.
+
+É um rascunho sem reservas, não um itinerário com disponibilidade verificada. Chegada/saída não estão incluídas nos quatro dias completos. Com voos nesses dias, remover atividades ou ampliar a estadia.
+
+As tentativas de consultar os sites dos Museus Capitolinos, Galleria Borghese e Museus Vaticanos em 28/10/2026 falharam por DNS. Horários, preços, regras de ingressos, funcionamento de bares/restaurantes e vagas em hostel **não foram verificados**. As durações abaixo são sugestões de planejamento, não horários publicados.
+
+### 17.2 Onde ficar
+
+**Base sugerida: hostel na região de Termini/Castro Pretorio**, pela conexão de transporte e opções de hospedagem. Alternativa: procurar em Monti para priorizar passeios e saídas nessa região, conforme orçamento e oferta.
+
+Dois candidatos para pesquisar, sem afirmar preço, disponibilidade ou qualidade atual:
+
+- **The RomeHello:** comparar localização, dormitório/quarto, lockers e programação social.
+- **YellowSquare Rome:** comparar ambiente social, regras de silêncio e localização do quarto em relação a espaços de convivência.
+
+Para decidir, conferir avaliações recentes, ar-condicionado, armazenamento de bagagem, roupa de cama, taxa turística, cancelamento e eventuais limites etários. Se dormir bem for prioridade, preferir quarto afastado do bar ou quarto privativo.
+
+### 17.3 Dia 1 — Museus Capitolinos, centro histórico e Monti
+
+- **Fim da manhã e começo da tarde:** Museus Capitolinos, reservando aproximadamente 2–3 horas.
+- **Almoço:** região do Campidoglio/centro; procurar uma trattoria e experimentar cacio e pepe ou uma alternativa compatível com restrições alimentares.
+- **Tarde:** passeio leve pela região da Piazza Venezia e ruas do centro, com pausa para café. Evitar acrescentar outro museu grande no mesmo dia.
+- **Jantar:** Monti; **La Taverna dei Fori Imperiali** é uma candidata a pesquisar e reservar, se disponível.
+- **Noite:** bares em Monti. **Ai Tre Scalini** é uma opção a verificar para vinho e petiscos; se estiver cheio, escolher outro local próximo em vez de atravessar a cidade.
+
+### 17.4 Dia 2 — Galleria Borghese, parque e centro
+
+- **Fim da manhã ou início da tarde:** Galleria Borghese, planejando cerca de 2 horas e respeitando o horário/duração do ingresso efetivamente comprado. Verificar reserva antecipada.
+- **Almoço:** região de Pinciano, antes ou depois da visita conforme o horário disponível.
+- **Tarde:** Villa Borghese e caminhada até o Pincio/Piazza del Popolo; deixar o restante livre.
+- **Jantar:** centro histórico; **Osteria dell'Ingegno** é uma candidata a consultar, sem disponibilidade confirmada.
+- **Noite:** opção de coquetéis no centro, como **Salotto42**, se funcionamento, preço e lotação forem adequados.
+
+### 17.5 Dia 3 — Museus Vaticanos e Trastevere
+
+- **Final da manhã e tarde:** Museus Vaticanos e Capela Sistina, com cerca de 3–4 horas de planejamento e pausas. Ficam na Cidade do Vaticano; incluir deslocamento e regras próprias de visita.
+- **Almoço:** Prati, antes ou depois do museu conforme o ingresso; um lanche evita somar restaurante demorado a uma visita extensa.
+- **Fim da tarde:** descanso no hostel ou ida a Trastevere. Não tratar Vaticano e Trastevere como pontos vizinhos: escolher transporte conforme localização, mobilidade e horário.
+- **Jantar:** **Da Enzo al 29** como candidato a verificar; ter uma segunda trattoria próxima como alternativa a filas ou falta de mesa.
+- **Noite:** **Freni e Frizioni**, em Trastevere, como opção de bar a consultar.
+
+Não acrescentar automaticamente a Basílica de São Pedro: acesso, filas e tempo precisam ser planejados separadamente. Se for prioridade, reduzir outras atividades.
+
+### 17.6 Dia 4 — Palazzo Massimo e noite flexível
+
+- **Fim da manhã:** Palazzo Massimo alle Terme, do Museo Nazionale Romano, reservando aproximadamente 2 horas.
+- **Almoço:** região de Termini/Monti; opção mais informal para equilibrar os jantares anteriores.
+- **Tarde:** livre para compras, repetir um bairro ou descansar. Se preferir arte contemporânea, avaliar trocar o museu por MAXXI, reorganizando também o deslocamento.
+- **Jantar:** escolher o bairro preferido dos dias anteriores, em vez de acrescentar outro deslocamento longo.
+- **Noite:** se houver pernoite adicional, repetir Monti ou aproveitar uma atividade social do hostel. Se houver partida, substituir o bar por retorno e preparação da viagem.
+
+### 17.7 Reservas, deslocamentos e orçamento
+
+Referências institucionais para confirmar ingressos e informações — não páginas com disponibilidade recuperada nesta tarefa:
+
+- [Museus Capitolinos](https://www.museicapitolini.org/).
+- [Galleria Borghese](https://galleriaborghese.beniculturali.it/).
+- [Museus Vaticanos](https://www.museivaticani.va/).
+- [Museo Nazionale Romano](https://museonazionaleromano.beniculturali.it/).
+- [MAXXI](https://www.maxxi.art/).
+- [Transporte público ATAC](https://www.atac.roma.it/).
+
+Usar o link de compra indicado pelo site institucional, sem presumir que resultados patrocinados sejam oficiais. Confirmar dias de fechamento e ingressos antes de fixar a ordem dos dias.
+
+Combinar caminhadas com transporte público; conferir serviço noturno no dia e reservar verba para táxi autorizado se necessário. Não pressupor metrô disponível após a saída dos bares. Não dirigir após beber.
+
+Sem datas e teto de gastos, não apresentar um total como cotação. Orçar separadamente: três noites de hostel, taxas, refeições, quatro visitas, transporte e bebidas. Se forem quatro noites ou houver transfer de aeroporto, acrescentar esses itens.
+
+Para reduzir gastos, alternar jantares com refeições simples, escolher menos visitas pagas e definir limite para saídas noturnas. Para personalizar de verdade, pedir datas, dias completos disponíveis, orçamento diário e preferência por dormitório ou quarto privativo.
+
+### 17.8 Como testar as alterações no app
+
+| Pedido de teste | Comportamento esperado |
+|---|---|
+| “Quero uma noite a menos de bar” | Retirar uma saída sem mexer nos museus ou nas outras noites |
+| “Troque Borghese por arte contemporânea” | Propor MAXXI, conferir dados e reorganizar a região do dia |
+| “Vou embora na tarde do quarto dia” | Remover jantar/bar desse dia e reservar margem para bagagem e transporte |
+| “Adicione um dia em Florença” | Perguntar se amplia a viagem ou substitui um dia em Roma; prever deslocamento e nova hospedagem |
+| “Meu hostel mudou para Trastevere” | Recalcular organização e deslocamentos, sem alterar reservas silenciosamente |
+| “Deixe mais barato” | Identificar gastos ajustáveis e propor alternativas sem inventar tarifas |
+
+O modelo propõe alterações; o aplicativo valida datas, IDs, restrições e fontes, apresenta a diferença e salva apenas após a confirmação necessária. Este exemplo ainda não foi publicado como catálogo nem executado por um aplicativo.
